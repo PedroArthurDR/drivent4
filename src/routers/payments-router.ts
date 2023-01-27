@@ -4,7 +4,8 @@ import { authenticateToken } from "@/middlewares";
 const paymentsRouter = Router();
 
 paymentsRouter
-  .get("/", authenticateToken, getPaymentByTicketId)
+  .all("/*", authenticateToken)
+  .get("/", getPaymentByTicketId)
   .post("/payments/process");
 
 export { paymentsRouter };

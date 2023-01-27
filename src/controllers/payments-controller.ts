@@ -5,10 +5,9 @@ import httpStatus from "http-status";
 export async function getPaymentByTicketId(req: Request, res: Response) {
   const { ticketId } = req.body;
   const { userId } = req.body;
-  if (!ticketId) return res.sendStatus(httpStatus.BAD_REQUEST);
   try{
     const paymentById = await getPaymentById(ticketId, userId);
-    return res.status(httpStatus.OK).send(paymentById);
+    return res.send(paymentById);
   }
   catch(error) {
     if (error.name === "NotFoundError") return res.sendStatus(httpStatus.NOT_FOUND);
