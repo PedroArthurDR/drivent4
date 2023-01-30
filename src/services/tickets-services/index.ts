@@ -1,4 +1,5 @@
 import { notFoundError } from "@/errors";
+import enrollmentRepository from "@/repositories/enrollment-repository";
 
 import ticketRepository from "@/repositories/ticket-repository";
 import { TicketType, Ticket } from "@prisma/client";
@@ -30,7 +31,17 @@ async function createTicketService(body: ticketBody) {
   if (!body.ticketTypeId) {
     return httpStatus.BAD_REQUEST;
   }
-  const result = await ticketRepository.createATicket(body.ticketTypeId, body.userId);
+  const enrollment = await enrollmentRepository.findByUserId(body.userId);
+  if(!enrollment) {
+    return httpStatus.NOT_FOUND;
+  }
+  const TicketToCreate = {
+    ticketTypeId: body.ticketTypeId,
+    enrollmentId: enrollment.id
+  };
+  console.log("RODANDO CREATE");
+  const result = await ticketRepository.createATicket(TicketToCreate);
+  console.log(result);
   return result;
 }
 
