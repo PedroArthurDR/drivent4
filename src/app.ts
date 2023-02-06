@@ -8,7 +8,14 @@ import { loadEnv, connectDb, disconnectDB } from "@/config";
 loadEnv();
 
 import { handleApplicationErrors } from "@/middlewares";
-import { usersRouter, authenticationRouter, eventsRouter, enrollmentsRouter, paymentsRouter } from "@/routers";
+import {
+  usersRouter,
+  authenticationRouter,
+  eventsRouter,
+  enrollmentsRouter,
+  paymentsRouter,
+  hotelsRouter
+} from "@/routers";
 import { ticketsRouter } from "./routers/tickets-router";
 
 const app = express();
@@ -20,8 +27,9 @@ app
   .use("/auth", authenticationRouter)
   .use("/event", eventsRouter)
   .use("/enrollments", enrollmentsRouter)
-  .use("/payments", paymentsRouter)
   .use("/tickets", ticketsRouter)
+  .use("/payments", paymentsRouter)
+  .use("/hotels", hotelsRouter)
   .use(handleApplicationErrors);
 
 export function init(): Promise<Express> {
