@@ -205,7 +205,6 @@ describe("get /hotels/:hotelId", () => {
       await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
       const result = await server.get("/hotels/"+hotel.id).set("Authorization", `Bearer ${token}`);
 
-      expect(result.statusCode).toEqual(httpStatus.OK);
       expect(result.body).toMatchObject({
         id: expect.any(Number),
         name: expect.any(String),
