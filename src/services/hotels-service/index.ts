@@ -1,61 +1,43 @@
-import { notFoundError, unauthorizedError, requestError, paymentRequiredError } from "@/errors";
+import hotelRepository from "@/repositories/hotel-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
-import hotelsRepository from "@/repositories/hotels-repository";
 import ticketRepository from "@/repositories/ticket-repository";
-import { TicketStatus } from "@prisma/client";
-import  { BAD_REQUEST } from "http-status";
+import { notFoundError } from "@/errors";
+import { cannotListHotelsError } from "@/errors/cannot-list-hotels-error";
 
-async function getAllHotelsServices(userId: number) {
-  const allHotels = await hotelsRepository.findAllHotels();
-  if (!allHotels) {
-    throw notFoundError();
-  }
-  const enrollment = await enrollmentRepository.findByUserId(userId);
+async function listHotels(userId: number) {
+  //Tem enrollment?
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
   if (!enrollment) {
     throw notFoundError();
   }
+  //Tem ticket pago isOnline false e includesHotel true
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
-  if(!ticket) {
-    throw notFoundError();
-  }
-  if(ticket.status!==TicketStatus.PAID)   throw paymentRequiredError();
 
-  const ticketType = await ticketRepository.findTicketTypeBy(ticket.ticketTypeId);
-
-  if(ticketType.isRemote === true) {
-    throw BAD_REQUEST;
+  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    throw cannotListHotelsError();
   }
-  return allHotels;
 }
 
-async function getByHotelIdServices(userId: number, hotellId: number) {
-  if(isNaN(hotellId)) {
-    throw BAD_REQUEST;
-  }
-  const enrollment = await enrollmentRepository.findByUserId(userId);
-  if (!enrollment) {
-    throw notFoundError();
-  }
-  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
-  if(!ticket) {
-    throw notFoundError();
-  }
-  if(ticket.status!==TicketStatus.PAID)   throw paymentRequiredError();
-  const ticketType = await ticketRepository.findTicketTypeBy(ticket.ticketTypeId);
-  if(ticketType.isRemote === true) {
-    console.log(ticketType.isRemote, "CAIU NO TRUE");
-    throw BAD_REQUEST;
-  }
-  const hotels = await hotelsRepository.findRoomByHotelId(hotellId);
-  if (!hotels) {
-    throw notFoundError();
-  }
+async function getHotels(userId: number) {
+  await listHotels(userId);
+
+  const hotels = await hotelRepository.findHotels();
   return hotels;
 }
 
-const hotelsServices = {
-  getAllHotelsServices,
-  getByHotelIdServices
+async function getHotelsWithRooms(userId: number, hotelId: number) {
+  await listHotels(userId);
+  const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
+
+  if (!hotel) {
+    throw notFoundError();
+  }
+  return hotel;
+}
+
+const hotelService = {
+  getHotels,
+  getHotelsWithRooms,
 };
 
-export default hotelsServices;
+export default hotelService;
